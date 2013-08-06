@@ -1,13 +1,12 @@
 package = "luarocks-build-cpp"
 version = "0.1-1"
 source = {
-	url = "git://github.com/lua4web/luarocks-build-cpp.git"
+	url = "git://github.com/lua4web/luarocks-build-cpp.git",
+	tag = "v0.1"
 }
 description = {
-	summary = "C++ support for building rocks",
-	detailed = [[
-luarocks-build-cpp is a fork of built-in build system for C++ rocks. 
-]],
+	summary = "C++ support for built-in build system",
+	detailed = "luarocks-build-cpp is a fork of built-in build system for C++ rocks. ",
 	homepage = "http://github.com/lua4web/luarocks-build-cpp",
 	license = "MIT/X11"
 }
