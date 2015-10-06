@@ -43,6 +43,23 @@ local function make_rc(luafilename, rcfilename)
    rcfile:close()
 end
 
+-- provide a fallback function for older (pre-2014) LuaRocks
+fs.is_lua = fs.is_lua or function( name )
+  local ret = false
+  if name:lower():match( "%.lua$" ) then
+    ret = true
+  else
+    local file = io.open( name, "r" )
+    if file then
+      if file:read():match( "^#!.*lua.*" ) then
+        ret = true
+      end
+      file:close()
+    end
+  end
+  return ret
+end
+
 --- Driver function for the builtin build back-end.
 -- @param rockspec table: the loaded rockspec.
 -- @return boolean or (nil, string): true if no errors ocurred,
@@ -238,7 +255,7 @@ function cpp.run(rockspec)
          if moddir ~= "" then
             module_name = dir.path(moddir, module_name)
             local ok, err = fs.make_dir(moddir)
-            if not ok then return nil, err end
+            if not ok then return nil, err or "could not create '"..moddir.."'" end
          end
          built_modules[module_name] = dir.path(libdir, module_name)
          ok = compile_library(module_name, objects, info.libraries, info.libdirs, name)
