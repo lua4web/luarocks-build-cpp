@@ -1,6 +1,7 @@
 
 --- A fork of builtin build system: back-end to provide a portable way of building C and C++ based Lua modules.
-module("luarocks.build.cpp", package.seeall)
+local buildcpp = { }
+package.loaded["luarocks.build.cpp"] = buildcpp
 
 local fs = require("luarocks.fs")
 local path = require("luarocks.path")
@@ -44,7 +45,7 @@ end
 -- @param rockspec table: the loaded rockspec.
 -- @return boolean or (nil, string): true if no errors ocurred,
 -- nil and an error message otherwise.
-function run(rockspec)
+buildcpp.run = function (rockspec)
    assert(type(rockspec) == "table")
    local compile_object, compile_library, compile_wrapper_binary
 
@@ -68,16 +69,16 @@ function run(rockspec)
          local extras = {}
          add_flags(extras, "-D%s", defines)
          add_flags(extras, "-I%s", incdirs)
-         return execute(variables.CC.." "..variables.CFLAGS, "-c", "-o", object, "-I"..variables.LUA_INCDIR, source, unpack(extras))
+         return execute(variables.CC.." "..variables.CFLAGS, "-c", "-o", object, "-I"..variables.LUA_INCDIR, source, table.unpack(extras))
       end
       compile_library = function(library, objects, libraries, libdirs, name)
-         local extras = { unpack(objects) }
+         local extras = { table.unpack(objects) }
          add_flags(extras, "-L%s", libdirs)
          add_flags(extras, "-l%s", libraries)
          extras[#extras+1] = dir.path(variables.LUA_LIBDIR, variables.LUALIB)
          extras[#extras+1] = "-l" .. (variables.MSVCRT or "m")
          extras[#extras+1] = "-lstdc++"
-         local ok = execute(variables.LD.." "..variables.LIBFLAG, "-o", library, unpack(extras))
+         local ok = execute(variables.LD.." "..variables.LIBFLAG, "-o", library, table.unpack(extras))
          return ok
       end
       compile_wrapper_binary = function(fullname, name)
@@ -100,10 +101,10 @@ function run(rockspec)
          local extras = {}
          add_flags(extras, "-D%s", defines)
          add_flags(extras, "-I%s", incdirs)
-         return execute(variables.CC.." "..variables.CFLAGS.." ".."/EHsc", "-c", "-Fo"..object, "-I"..variables.LUA_INCDIR, source, unpack(extras))
+         return execute(variables.CC.." "..variables.CFLAGS.." ".."/EHsc", "-c", "-Fo"..object, "-I"..variables.LUA_INCDIR, source, table.unpack(extras))
       end
       compile_library = function(library, objects, libraries, libdirs, name)
-         local extras = { unpack(objects) }
+         local extras = { table.unpack(objects) }
          add_flags(extras, "-libpath:%s", libdirs)
          add_flags(extras, "%s.lib", libraries)
          local basename = dir.base_name(library):gsub(".[^.]*$", "")
@@ -112,7 +113,7 @@ function run(rockspec)
          def:write("EXPORTS\n")
          def:write("luaopen_"..name:gsub("%.", "_").."\n")
          def:close()
-         local ok = execute(variables.LD, "-dll", "-def:"..deffile, "-out:"..library, dir.path(variables.LUA_LIBDIR, variables.LUALIB), unpack(extras))
+         local ok = execute(variables.LD, "-dll", "-def:"..deffile, "-out:"..library, dir.path(variables.LUA_LIBDIR, variables.LUALIB), table.unpack(extras))
          local manifestfile = basename..".dll.manifest"
          if ok and fs.exists(manifestfile) then
             ok = execute(variables.MT, "-manifest", manifestfile, "-outputresource:"..basename..".dll;2")
@@ -145,10 +146,10 @@ function run(rockspec)
          local extras = {}
          add_flags(extras, "-D%s", defines)
          add_flags(extras, "-I%s", incdirs)
-         return execute(variables.CC.." "..variables.CFLAGS, "-I"..variables.LUA_INCDIR, "-c", source, "-o", object, unpack(extras))
+         return execute(variables.CC.." "..variables.CFLAGS, "-I"..variables.LUA_INCDIR, "-c", source, "-o", object, table.unpack(extras))
       end
       compile_library = function (library, objects, libraries, libdirs)
-         local extras = { unpack(objects) }
+         local extras = { table.unpack(objects) }
          add_flags(extras, "-L%s", libdirs)
          if cfg.gcc_rpath then
             add_flags(extras, "-Wl,-rpath,%s:", libdirs)
@@ -158,7 +159,7 @@ function run(rockspec)
          if cfg.is_platform("cygwin") then
             add_flags(extras, "-l%s", {"lua"})
          end
-         return execute(variables.LD.." "..variables.LIBFLAG, "-o", library, "-L"..variables.LUA_LIBDIR, unpack(extras))
+         return execute(variables.LD.." "..variables.LIBFLAG, "-o", library, "-L"..variables.LUA_LIBDIR, table.unpack(extras))
       end
       compile_wrapper_binary = function(fullname, name) return true, name end
    end
